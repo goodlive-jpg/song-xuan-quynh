@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sóng - Xuân Quỳnh | Bài giảng tương tác</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
+    background: linear-gradient(-45deg, #e0f7fa, #e3f2fd, #fce4ec, #e8eaf6);
+    background-size: 400% 400%;
+    animation: bgMove 18s ease infinite;
+  }
+  @keyframes bgMove {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .slide {
+    position: relative;
+    width: 100vw; height: 100vh;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 48px 40px 96px;
+  }
+  .slide.active { display: flex; animation: fadeIn .8s ease forwards; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .slide-header { text-align: center; margin-bottom: 22px; animation: slideDown .9s ease forwards; }
+  @keyframes slideDown { 0% { opacity: 0; transform: translateY(-28px); } 100% { opacity: 1; transform: translateY(0); } }
+
+  h2 {
+    font-size: 2rem;
+    color: #0d47a1;
+    letter-spacing: .5px;
+    text-shadow: 0 2px 8px rgba(13,71,161,.15);
+  }
+  .hint {
+    margin-top: 6px;
+    font-size: .85rem;
+    color: #d32f2f;
+    font-weight: 600;
+    animation: blinkHint 2.4s ease-in-out infinite;
+  }
+  @keyframes blinkHint { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
+
+  .content-row {
+    display: flex;
+    gap: 34px;
+    align-items: center;
+    width: 100%;
+    max-width: 1120px;
+    animation: riseUp 1s ease forwards;
+  }
+  @keyframes riseUp { 0% { opacity: 0; transform: translateY(26px); } 100% { opacity: 1; transform: translateY(0); } }
+
+  .img-card {
+    flex: 0 0 300px;
+    height: 330px;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 6px solid #fff;
+    box-shadow: 0 18px 40px rgba(0,0,0,.25);
+    animation: floatImg 5s ease-in-out infinite;
+    background: linear-gradient(135deg, #0d47a1, #26c6da);
+  }
+  .img-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  @keyframes floatImg { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
+
+  .clauses { flex: 1; text-align: left; }
+
+  .clause {
+    background: rgba(255,255,255,.88);
+    border-left: 5px solid #0d47a1;
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,.08);
+    transition: transform .3s ease, box-shadow .3s ease, background .3s ease, border-color .3s ease;
+    animation: clauseIn .6s ease forwards;
+    opacity: 0;
+  }
+  @keyframes clauseIn { 0% { opacity: 0; transform: translateX(-24px); } 100% { opacity: 1; transform: translateX(0); } }
+  .clause:nth-child(1) { animation-delay: .15s; }
+  .clause:nth-child(2) { animation-delay: .3s; }
+  .clause:nth-child(3) { animation-delay: .45s; }
+  .clause:nth-child(4) { animation-delay: .6s; }
+  .clause:hover { transform: translateX(7px); box-shadow: 0 9px 22px rgba(13,71,161,.18); }
+  .clause.open { background: #fff; border-left-color: #d32f2f; }
+
+  .clause-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    font-weight: 600;
+    color: #1a237e;
+    font-size: 1rem;
+    line-height: 1.4;
+  }
+  .plus {
+    flex: 0 0 auto;
+    font-size: 1.5rem;
+    line-height: 1;
+    color: #d32f2f;
+    transition: transform .4s ease;
+  }
+  .clause.open .plus { transform: rotate(45deg); }
+
+  .clause-explain {
+    max-height: 0;
+    overflow: hidden;
+    color: #37474f;
+    font-size: .95rem;
+    line-height: 1.65;
+    transition: max-height .5s ease, margin-top .35s ease;
+  }
+  .clause.open .clause-explain { max-height: 420px; margin-top: 10px; }
+  .clause-explain em { color: #6a1b9a; }
+
+  .nav {
+    position: absolute;
+    bottom: 26px; left: 50%;
+    transform: translateX(-50%);
+    display: flex; gap: 14px;
+    z-index: 100;
+  }
+  .nav button {
+    padding: 10px 24px;
+    border: none; border-radius: 26px;
+    background: #1a237e; color: #fff;
+    cursor: pointer; font-weight: 700; font-size: .95rem;
+    transition: transform .25s, background .25s;
+    box-shadow: 0 6px 16px rgba(26,35,126,.35);
+  }
+  .nav button:hover { background: #d32f2f; transform: scale(1.07); }
+  .nav button:disabled { background: #b0bec5; cursor: not-allowed; box-shadow: none; transform: none; }
+
+  .counter {
+    position: absolute; top: 24px; right: 32px;
+    background: rgba(26,35,126,.92); color: #fff;
+    padding: 7px 16px; border-radius: 20px;
+    font-weight: 700; font-size: .85rem;
+    z-index: 100;
+    animation: slideInRight .8s ease;
+  }
+  @keyframes slideInRight { 0% { opacity: 0; transform: translateX(26px); } 100% { opacity: 1; transform: translateX(0); } }
+
+  .cover { justify-content: center; }
+  .cover h1 {
+    font-size: 4.4rem;
+    letter-spacing: 12px;
+    color: #0d47a1;
+    text-shadow: 0 6px 22px rgba(13,71,161,.35);
+    animation: titlePop 1s cubic-bezier(.2,.9,.3,1.4) forwards;
+  }
+  @keyframes titlePop { 0% { opacity: 0; transform: scale(.7); } 100% { opacity: 1; transform: scale(1); } }
+  .cover .author {
+    font-size: 1.7rem; font-weight: 700; color: #d32f2f;
+    margin: 6px 0 18px;
+    animation: riseUp 1.1s ease forwards;
+    opacity: 0;
+  }
+  .cover .img-card { height: 240px; flex: 0 0 380px; margin-bottom: 16px; }
+  .cover .clauses { max-width: 760px; margin-top: 6px; }
+
+  .poem-box {
+    background: rgba(255,255,255,.85);
+    border-radius: 14px;
+    padding: 16px 22px;
+    font-style: italic;
+    color: #4a148c;
+    line-height: 1.8;
+    font-size: .98rem;
+    max-width: 100%;
+    border: 1px dashed #b39ddb;
+    margin-bottom: 12px;
+  }
+  .poem-box .st { display: block; }
+
+  @media (max-width: 860px) {
+    .content-row { flex-direction: column; gap: 16px; }
+    .img-card { flex: 0 0 auto; width: 78%; height: 180px; }
+    .cover .img-card { width: 82%; height: 180px; }
+    h2 { font-size: 1.45rem; }
+    .cover h1 { font-size: 3rem; letter-spacing: 8px; }
+    .slide { padding: 26px 18px 90px; justify-content: flex-start; overflow-y: auto; }
+    .clause-title { font-size: .92rem; }
+    .clause-explain { font-size: .88rem; }
+    .poem-box { font-size: .85rem; padding: 12px 14px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="counter" id="counter">1 / 10</div>
+
+<!-- ===== SLIDE 1: BÌA ===== -->
+<div class="slide cover active" id="s1">
+  <h1>SÓNG</h1>
+  <div class="author">Xuân Quỳnh</div>
+  <div class="img-card">
+    <img src="https://images.unsplash.com/photo-1505142468610-359e7d316be0?auto=format&fit=crop&w=800&q=80" alt="Sóng biển" onerror="this.style.display='none'">
+  </div>
+  <div class="clauses">
+    <div class="clause" onclick="toggleClause(this)">
+      <div class="clause-title"><span>Bài thơ tiêu biểu của thơ tình Việt Nam hiện đại</span><span class="plus">+</span></div>
+      <div class="clause-explain">“Sóng” được trích từ tập <em>Hoa dọc chiến hào</em> (1968). Đây là một trong những bài thơ tình hay nhất của Xuân Quỳnh và của thơ ca Việt Nam thế kỷ XX, được giảng dạy rộng rãi trong nhà trường.</div>
+    </div>
+    <div class="clause" onclick="toggleClause(this)">
+      <div class="clause-title"><span>Nhấn vào mỗi mệnh đề để xem giải thích</span><span class="plus">+</span></div>
+      <div class="clause-explain">Mỗi dòng chữ trên slide là một <em>mệnh đề</em>. Khi nhấn vào, phần giải thích chi tiết sẽ mở ra. Dùng nút <em>Tiếp / Trở lại</em> hoặc phím mũi tên để chuyển slide.</div>
+    </div>
+  </div>
+  <div class="nav"><button onclick="nextSlide()">Bắt đầu →</button></div>
+</div>
+
+<!-- ===== SLIDE 2: TÁC GIẢ ===== -->
+<div class="slide" id="s2">
+  <div class="slide-header">
+    <h2>Tác giả: Xuân Quỳnh</h2>
+    <div class="hint">Nhấn vào mỗi mệnh đề để xem giải thích</div>
+  </div>
+  <div class="content-row">
+    <div class="img-card">
+      <img src="https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=800&q=80" alt="Trang viết" onerror="this.style.display='none'">
+    </div>
+    <div class="clauses">
+      <div class="clause" onclick="toggleClause(this)">
+        <div class="clause-title"><span>Xuân Quỳnh (1942–1988) là nhà thơ nữ tiêu biểu của thơ hiện đại Việt Nam</span><span class="plus">+</span></div>
+        <div class="clause-explain">Tên thật là <em>Nguyễn Thị Xuân Quỳnh</em>, quê ở La Khê, Hà Đông (nay thuộc Hà Nội). Chị nổi tiếng với những bài thơ tình chân thành, giàu nữ tính và rất đỗi đời thường.</div>
+      </div>
+      <div class="clause" onclick="toggleClause(this)">
+        <div class="clause-title"><span>Chị mất trong tai nạn tàu hỏa năm 1988</span><span class="plus">+</span></div>
+        <div class="clause-explain">Xuân Quỳnh cùng chồng là nhà viết kịch <em>Lưu Quang Vũ</em> và con trai gặp tai nạn tại Hải Dương. Sự ra đi đột ngột để lại niềm tiếc thương sâu sắc cho nền văn học và độc giả.</div>
+      </div>
+      <div class="clause" onclick="toggleClause(this)">
+        <div class="clause-title"><span>Thơ Xuân Quỳnh giàu cảm xúc, chân thành và da diết</span><span class="plus">+</span></div>
+        <div class="clause-explain">Chị thường viết về tình yêu, gia đình, tuổi trẻ bằng giọng thơ <em>tự nhiên, giản dị</em> nhưng thấm đượm triết lý, khiến người đọc dễ đồng cảm.</div>
+      </div>
+    </div>
+  </div>
+  <div class="nav"><button onclick="prevSlide()">← Trở lại</button><button onclick="nextSlide()">Tiếp →</button></div>
+</div>
+
+<!-- ===== SLIDE 3: HOÀN CẢNH ===== -->
+<div class="slide" id="s3">
+  <div class="slide-header">
+    <h2>Hoàn cảnh sáng tác</h2>
+    <div class="hint">Nhấn vào mỗi mệnh đề để xem giải thích</div>
+  </div>
+  <div class="content-row">
+    <div class="img-card">
+      <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80" alt="Bãi biển" onerror="this.style.display='none'">
+    </div>
+    <div class="clauses">
+      <div class="clause" onclick="toggleClause(this)">
+        <div class="clause-title"><span>Bài thơ được sáng tác năm 1967</span><span class="plus">+</span></div>
+        <div class="clause-explain">Đây là giai đoạn đất nước đang bước vào cuộc kháng chiến chống Mỹ ác liệt. Bài thơ in trong tập <em>Hoa dọc chiến hào</em> (1968) – tập thơ đánh dấu sự trưởng thành của hồn thơ Xuân Quỳnh.</div>
+      </div>
+      <div class="clause" onclick="toggleClause(this)">
+        <div class="clause-title"><span>Cảm hứng ra đời từ hình ảnh sóng biển</span><span class="plus">+</span></div>
+        <div class="clause-explain">Trong một chuyến đi thực tế vùng biển, tác giả quan sát những con sóng vỗ bờ và liên tưởng đến <em>nhịp đập của tình yêu</em>, từ đó xây dựng hình tượng sóng làm trung tâm bài thơ.</div>
+      </div>
+      <div class="clause" onclick="toggleClause(this)">
+        <div class="clause-title"><span>Đề tài: tình yêu đôi lứa của người phụ nữ</span><span class="plus">+</span></div>
+        <div class="clause-explain">Qua sóng, tác giả bộc lộ <em>khát vọng tình yêu</em> mãnh liệt, nỗi nhớ, sự thủy chung và ước muốn tình yêu vĩnh cửu – một đề tài quen thuộc nhưng được thể hiện đầy mới mẻ.</div>
+      </div>
+    </div>
+  </div>
+  <div class="nav"><button onclick="prevSlide()">← Trở lại</button><button onclick="nextSlide()">Tiếp →</button></div>
+</div>
+
+<!-- ===== SLIDE 4: THỂ THƠ & BỐ CỤC ===== -->
+<div class="slide" id="s4">
+  <div class="slide-header">
+    <h2>Thể thơ và bố cục</h2>
+    <div class="hint">Nhấn vào mỗi mệnh đề để xem giải thích</div>
+  </div>
+  <div class="content-row">
+    <div class="img-card">
+      <img src="https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=800&q=80" alt="Mặt biển" onerror="this.style.display='none'">
+    </div>
+    <div class="clauses">
+      <div class="clause" onclick="toggleClause(this)">
+        <div class="clause-title"><span>Bài thơ viết theo thể thơ năm chữ</span><span class="plus">+</span></div>
+        <div class="clause-explain">Thể thơ 5 chữ tạo nhịp điệu <em>đều đặn, dập dồn như những con sóng</em>, rất phù hợp để diễn tả nhịp đập của tình yêu và nỗi nhớ.</div>
+      </div>
+      <div class="clause" onclick="toggleClause(this)">
+        <div class="clause-title"><span>Bố cục ba phần: sóng và khát vọng – sóng và nỗi nhớ – sóng và khát vọng vĩnh cửu</span><span class="plus">+</span></div>
+        <div class="clause-explain">Mạch cảm xúc đi từ <em>quan sát sóng</em>, đến <em>nỗi nhớ da diết</em>, rồi kết thúc bằng <em>khát vọng hóa thân</em> để tình yêu tồn tại mãi mãi.</div>
+      </div>
+      <div class="clause" onclick="toggleClause(this)">
+        <div class="clause-title"><span>Hình tượng sóng song hành cùng hình tượng “em”</span><span class="plus">+</span></div>
+        <div class="clause-explain">Sóng là <em>ẩn dụ</em> cho tâm hồn và tình yêu của người phụ nữ. Hai hình tượng khi hòa vào nhau, khi tách ra, tạo nên sự <em>sóng đôi</em> độc đáo của bài thơ.</div>
+      </div>
+    </div>
+  </div>
+  <div class="nav"><button onclick="prevSlide()">← Trở lại</button><button onclick="nextSlide()">Tiếp →</button></div>
+</div>
+
+<!-- ===== SLIDE 5: KHỔ 1-2 ===== -->
+<div class="slide" id="s5">
+  <div class="slide-header">
+    <h2>Khổ 1–2: Sóng và khát vọng tình yêu</h2>
+    <div class="hint">Nhấn vào mỗi mệnh đề để xem giải thích</div>
+  </div>
+  <div class="content-row">
+    <div class="img-card">
+      <img src="https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=800&q=80" alt="Sóng vỗ" onerror="this.style.display='none'">
+    </div>
+    <div class="clauses">
+      <div class="poem-box">
+        <span class="st">Dữ dội và dịu êm / Ồn ào và lặng lẽ</span>
+        <span class="st">Sóng không hiểu nổi mình / Sóng tìm ra tận bể</span>
+        <span class="st">Nỗi khát vọng tình yêu / Bồi hồi trong ngực trẻ</span>
+      </div>
+      <div class="clause" onclick="toggleClause(this)">
+        <div class="clause-title"><span>“Dữ dội và dịu êm / Ồn ào và lặng lẽ”</span><span class="plus">+</span></div>
+        <div class="clause-explain">Những cặp từ <em>đối lập</em> khắc họa các trạng thái của sóng, đồng thời là những cung bậc cảm xúc phong phú, phức tạp của tình yêu: khi mãnh liệt, khi dịu dàng, khi ồn ào, khi lặng lẽ.</div>
+      </div>
+      <div class="clause" onclick="toggleClause(this)">
+        <div class="clause-title"><span>“Sóng không hiểu nổi mình / Sóng tìm ra tận bể”</span><span class="plus">+</span></div>
+        <div class="clause-explain">Sóng khao khát <em>tự nhận thức</em>, đi tìm chính mình nơi biển lớn. Đó cũng là khát vọng của con người muốn thấu hiểu tình yêu và chính bản thân mình.</div>
+      </div>
+      <div class="clause" onclick="toggleClause(this)">
+        <div class="clause-title"><span>“Nỗi khát vọng tình yêu / Bồi hồi trong ngực trẻ”</span><span class="plus">+</span></div>
+        <div class="clause-explain">Tình yêu là <em>khát vọng muôn đời của tuổi trẻ</em>, luôn bồi hồi, rạo rực. Câu thơ khẳng định sức sống và vẻ đẹp vĩnh cửu của tình yêu con người.</div>
+      </div>
+    </div>
+  </div>
+  <div class="nav"><button onclick="prevSlide()">← Trở lại</button><button onclick="nextSlide()">Tiếp →</button></div>
+</div>
+
+<!-- ===== SLIDE 6: KHỔ 3-4 ===== -->
+<div class="slide" id="s6">
+  <div class="slide-header">
+    <h2>Khổ 3–4: Nguồn gốc của tình yêu</h2>
+    <div class="hint">Nhấn vào mỗi mệnh đề để xem giải thích</div>
+  </div>
+  <div class="content-row">
+    <div class="img-card">
+      <img src="https://images.unsplash.com/photo-1471922694854-ff1b63b20054?auto=format&fit=crop&w=800&q=80" alt="Biển chiều" onerror="this.style.display='none'">
+    </div>
+    <div class="clauses">
+      <div class="poem-box">
+        <span class="st">Trước muôn trùng sóng bể / Em nghĩ về anh, em</span>
+        <span class="st">Sóng bắt đầu từ gió / Gió bắt đầu từ đâu?</span>
+        <span class="st">Em cũng không biết nữa / Khi nào ta yêu nhau</span>
+      </div>
+      <div class="clause" onclick="toggleClause(this)">
+        <div class="clause-title"><span>“Trước muôn trùng sóng bể / Em nghĩ về anh, em”</span><span class="plus">+</span></div>
+        <div class="clause-explain">Từ hình ảnh sóng biển, người con gái <em>liên tưởng đến anh</em>. Sóng và tình yêu hòa làm một, thể hiện nỗi nhớ và sự gắn bó sâu nặng.</div>
+      </div>
+      <div class="clause" onclick="toggleClause(this)">
+        <div class="clause-title"><span>“Sóng bắt đầu từ gió / Gió bắt đầu từ đâu?”</span><span class="plus">+</span></div>
+        <div class="clause-explain">Câu hỏi tu từ dồn dập như sóng. Tác giả <em>truy tìm nguồn gốc</em> của sóng, cũng là truy tìm nguồn gốc của tình yêu – một điều bí ẩn không thể lý giải.</div>
+      </div>
+      <div class="clause" onclick="toggleClause(this)">
+        <div class="clause-title"><span>“Em cũng không biết nữa / Khi nào ta yêu nhau”</span><span class="plus">+</span></div>
+        <div class="clause-explain">Tình yêu đến <em>tự nhiên, không hẹn trước</em>, lý trí không thể cắt nghĩa. Câu thơ chân thành, nữ tính, khẳng định tình yêu là một món quà kỳ diệu.</div>
+      </div>
+    </div>
+  </div>
+  <div class="nav"><button onclick="prevSlide()">← Trở lại</button><button onclick="nextSlide()">Tiếp →</button></div>
+</div>
+
+<!-- ===== SLIDE 7: KHỔ 5 - NỖI NHỚ ===== -->
+<div class="slide" id="s7">
+  <div class="slide-header">
+    <h2>Khổ 5: Nỗi nhớ trong tình yêu</h2>
+    <div class="hint">Nhấn vào mỗi mệnh đề để xem giải thích</div>
+  </div>
+  <div class="content-row">
+    <div class="img-card">
+      <img src="https://images.unsplash.com/photo-1468581264429-2548ef9eb732?auto=format&fit=crop&w=800&q=80" alt="Hoàng hôn biển" onerror="this.style.display='none'">
+    </div>
+    <div class="clauses">
+      <div class="poem-box">
+        <span class="st">Con sóng dưới lòng sâu / Con sóng trên mặt nước</span>
+        <span class="st">Ôi con sóng nhớ bờ / Ngày đêm không ngủ được</span>
+        <span class="st">Lòng em nhớ đến anh / Cả trong mơ còn thức</span>
+      </div>
+      <div class="clause" onclick="toggleClause(this)">
+        <div class="clause-title"><span>“Con sóng dưới lòng sâu / Con sóng trên mặt nước”</span><span class="plus">+</span></div>
+        <div class="clause-explain">Sóng hiện diện ở <em>mọi tầng sâu, mọi nơi</em>. Điệp ngữ “con sóng” nhấn mạnh nỗi nhớ tràn ngập, không đâu là không có sóng, không lúc nào là không nhớ.</div>
+      </div>
+      <div class="clause" onclick="toggleClause(this)">
+        <div class="clause-title"><span>“Ôi con sóng nhớ bờ / Ngày đêm không ngủ được”</span><span class="plus">+</span></div>
+        <div class="clause-explain">Nghệ thuật <em>nhân hóa</em>: sóng cũng biết nhớ, biết thao thức. Sóng nhớ bờ như người con gái nhớ người yêu, nỗi nhớ <em>da diết, khôn nguôi</em>.</div>
+      </div>
+      <div class="clause" onclick="toggleClause(this)">
+        <div class="clause-title"><span>“Lòng em nhớ đến anh / Cả trong mơ còn thức”</span><span class="plus">+</span></div>
+        <div class="clause-explain">Nỗi nhớ <em>thường trực cả trong tiềm thức</em>. “Trong mơ còn thức” là cách nói tinh tế, khẳng định tình yêu và nỗi nhớ chiếm trọn tâm hồn người con gái.</div>
+      </div>
+    </div>
+  </div>
+  <div class="nav"><button onclick="prevSlide()">← Trở lại</button><button onclick="nextSlide()">Tiếp →</button></div>
+</div>
+
+<!-- ===== SLIDE 8: KHỔ 6-7 - THỦY CHUNG ===== -->
+<div class="slide" id="s8">
+  <div class="slide-header">
+    <h2>Khổ 6–7: Sự thủy chung, son sắt</h2>
+    <div class="hint">Nhấn vào mỗi mệnh đề để xem giải thích</div>
+  </div>
+  <div class="content-row">
+    <div class="img-card">
+      <img src="https://images.unsplash.com/photo-1498623116890-37e912163d5d?auto=format&fit=crop&w=800&q=80" alt="Đại dương" onerror="this.style.display='none'">
+    </div>
+    <div class="clauses">
+      <div class="poem-box">
+        <span class="st">Dẫu xuôi về phương bắc / Dẫu ngược về phương nam</span>
+        <span class="st">Nơi nào em cũng nghĩ / Hướng về anh – một phương</span>
+        <span class="st">Con nào chẳng tới bờ / Dù muôn vời cách trở</span>
+      </div>
+      <div class="clause" onclick="toggleClause(this)">
+        <div class="clause-title"><span>“Dẫu xuôi về phương bắc / Dẫu ngược về phương nam”</span><span class="plus">+</span></div>
+        <div class="clause-explain">Hai chiều không gian <em>đối lập, xa cách</em> tượng trưng cho mọi hoàn cảnh, mọi thử thách mà con người có thể trải qua trong cuộc đời.</div>
+      </div>
+      <div class="clause" onclick="toggleClause(this)">
+        <div class="clause-title"><span>“Nơi nào em cũng nghĩ / Hướng về anh – một phương”</span><span class="plus">+</span></div>
+        <div class="clause-explain">Dù đi đâu, ở đâu, lòng em vẫn <em>chỉ hướng về một người</em>. Câu thơ khẳng định tình yêu <em>thủy chung, son sắt</em> và duy nhất.</div>
+      </div>
+      <div class="clause" onclick="toggleClause(this)">
+        <div class="clause-title"><span>“Con nào chẳng tới bờ / Dù muôn vời cách trở”</span><span class="plus">+</span></div>
+        <div class="clause-explain">Mọi con sóng đều tìm được bờ, như <em>niềm tin mãnh liệt</em> rằng tình yêu chân thành sẽ vượt qua mọi cách trở để đến được bến bờ hạnh phúc.</div>
+      </div>
+    </div>
+  </div>
+  <div class="nav"><button onclick="prevSlide()">← Trở lại</button><button onclick="nextSlide()">Tiếp →</button></div>
+</div>
+
+<!-- ===== SLIDE 9: KHỔ 8-9 - KHÁT VỌNG ===== -->
+<div class="slide" id="s9">
+  <div class="slide-header">
+    <h2>Khổ 8–9: Khát vọng tình yêu vĩnh cửu</h2>
+    <div class="hint">Nhấn vào mỗi mệnh đề để xem giải thích</div>
+  </div>
+  <div class="content-row">
+    <div class="img-card">
+      <img src="https://images.unsplash.com/photo-1455729552865-3658a5d39692?auto=format&fit=crop&w=800&q=80" alt="Biển lớn" onerror="this.style.display='none'">
+    </div>
+    <div class="clauses">
+      <div class="poem-box">
+        <span class="st">Cuộc đời tuy dài thế / Năm tháng vẫn đi qua</span>
+        <span class="st">Làm sao được tan ra / Thành trăm con sóng nhỏ</span>
+        <span class="st">Giữa biển lớn tình yêu / Để ngàn năm còn vỗ</span>
+      </div>
+      <div class="clause" onclick="toggleClause(this)">
+        <div class="clause-title"><span>“Cuộc đời tuy dài thế / Năm tháng vẫn đi qua”</span><span class="plus">+</span></div>
+        <div class="clause-explain">Tác giả chiêm nghiệm về <em>quy luật thời gian</em>: cuộc đời dẫu dài nhưng năm tháng vẫn trôi qua không ngừng, con người không thể giữ được thời gian.</div>
+      </div>
+      <div class="clause" onclick="toggleClause(this)">
+        <div class="clause-title"><span>“Làm sao được tan ra / Thành trăm con sóng nhỏ”</span><span class="plus">+</span></div>
+        <div class="clause-explain">Khát vọng <em>hóa thân</em> của người con gái: muốn tan thành trăm con sóng nhỏ để hòa mình vào biển lớn tình yêu, không còn cái tôi riêng mà thành tình yêu chung vĩnh cửu.</div>
+      </div>
+      <div class="clause" onclick="toggleClause(this)">
+        <div class="clause-title"><span>“Giữa biển lớn tình yêu / Để ngàn năm còn vỗ”</span><span class="plus">+</span></div>
+        <div class="clause-explain">Ước muốn <em>tình yêu tồn tại mãi mãi</em>, vượt qua thời gian hữu hạn của đời người. Đây là khát vọng lớn lao, cao đẹp và bất diệt của tình yêu.</div>
+      </div>
+    </div>
+  </div>
+  <div class="nav"><button onclick="prevSlide()">← Trở lại</button><button onclick="nextSlide()">Tiếp →</button></div>
+</div>
+
+<!-- ===== SLIDE 10: TỔNG KẾT ===== -->
+<div class="slide" id="s10">
+  <div class="slide-header">
+    <h2>Tổng kết: Nội dung và nghệ thuật</h2>
+    <div class="hint">Nhấn vào mỗi mệnh đề để xem giải thích</div>
+  </div>
+  <div class="content-row">
+    <div class="img-card">
+      <img src="https://images.unsplash.com/photo-1476673160081-cf065607f449?auto=format&fit=crop&w=800&q=80" alt="Sóng biển" onerror="this.style.display='none'">
+    </div>
+    <div class="clauses">
+      <div class="clause" onclick="toggleClause(this)">
+        <div class="clause-title"><span>Nghệ thuật: thể thơ 5 chữ, ẩn dụ “sóng”, nhân hóa và điệp ngữ</span><span class="plus">+</span></div>
+        <div class="clause-explain">Thể thơ 5 chữ tạo nhịp sóng; hình tượng sóng là <em>ẩn dụ</em> cho tình yêu; nhân hóa khiến sóng có tâm hồn; điệp ngữ và câu hỏi tu từ làm bài thơ giàu nhạc điệu, giàu cảm xúc.</div>
+      </div>
+      <div class="clause" onclick="toggleClause(this)">
+        <div class="clause-title"><span>Nội dung: tình yêu chân thành, thủy chung và khát vọng vĩnh cửu</span><span class="plus">+</span></div>
+        <div class="clause-explain">Bài thơ thể hiện vẻ đẹp tâm hồn người phụ nữ: <em>yêu tha thiết, nhớ da diết, chung thủy</em> và luôn khao khát một tình yêu bất diệt, vượt qua mọi giới hạn.</div>
+      </div>
+      <div class="clause" onclick="toggleClause(this)">
+        <div class="clause-title"><span>Giá trị: bài thơ tình tiêu biểu, lay động bao thế hệ độc giả</span><span class="plus">+</span></div>
+        <div class="clause-explain">“Sóng” kết tinh tài năng và tấm lòng của Xuân Quỳnh, trở thành <em>tiếng lòng của bao thế hệ</em> yêu và được yêu, khẳng định vị trí của chị trong nền thơ hiện đại Việt Nam.</div>
+      </div>
+    </div>
+  </div>
+  <div class="nav"><button onclick="prevSlide()">← Trở lại</button><button onclick="restart()">Lại từ đầu ↺</button></div>
+</div>
+
+<script>
+  let current = 1;
+  const total = 10;
+
+  function show(n) {
+    document.querySelectorAll('.slide').forEach(function (s) { s.classList.remove('active'); });
+    var target = document.getElementById('s' + n);
+    target.classList.add('active');
+    document.getElementById('counter').textContent = n + ' / ' + total;
+    current = n;
+  }
+  function nextSlide() { if (current < total) show(current + 1); }
+  function prevSlide() { if (current > 1) show(current - 1); }
+  function restart() { show(1); }
+
+  function toggleClause(el) { el.classList.toggle('open'); }
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+  });
+</script>
+
+</body>
+</html>
